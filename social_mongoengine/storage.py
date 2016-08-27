@@ -5,8 +5,8 @@ from mongoengine import DictField, IntField, StringField, \
                         EmailField, BooleanField
 from mongoengine.queryset import OperationError
 
-from social.storage import UserMixin, AssociationMixin, NonceMixin, \
-                           CodeMixin, BaseStorage
+from social_core.storage import UserMixin, AssociationMixin, NonceMixin, \
+                                CodeMixin, BaseStorage
 
 
 UNUSABLE_PASSWORD = '!'  # Borrowed from django 1.4
