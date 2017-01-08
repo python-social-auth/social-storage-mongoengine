@@ -6,7 +6,7 @@ from mongoengine import DictField, IntField, StringField, \
 from mongoengine.queryset import OperationError
 
 from social_core.storage import UserMixin, AssociationMixin, NonceMixin, \
-                                CodeMixin, BaseStorage
+                                CodeMixin, PartialMixin, BaseStorage
 
 
 UNUSABLE_PASSWORD = '!'  # Borrowed from django 1.4
@@ -176,11 +176,32 @@ class MongoengineCodeMixin(CodeMixin):
             return None
 
 
+class MongoenginePartialMixin(PartialMixin):
+    token = StringField(max_length=32)
+    extra_data = DictField()
+    next_step = IntField()
+    backend = StringField(max_length=32)
+
+    @classmethod
+    def load(cls, token):
+        try:
+            return cls.objects.get(token=token)
+        except cls.DoesNotExist:
+            return None
+
+    @classmethod
+    def destroy(cls, token):
+        partial = cls.load(token)
+        if partial:
+            partial.delete()
+
+
 class BaseMongoengineStorage(BaseStorage):
     user = MongoengineUserMixin
     nonce = MongoengineNonceMixin
     association = MongoengineAssociationMixin
     code = MongoengineCodeMixin
+    partial = MongoenginePartialMixin
 
     @classmethod
     def is_integrity_error(cls, exception):
