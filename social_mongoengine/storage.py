@@ -178,6 +178,7 @@ class MongoengineCodeMixin(CodeMixin):
 
 class MongoenginePartialMixin(PartialMixin):
     token = StringField(max_length=32)
+    data = DictField()
     extra_data = DictField()
     next_step = IntField()
     backend = StringField(max_length=32)
