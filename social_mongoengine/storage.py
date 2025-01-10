@@ -1,22 +1,26 @@
 import base64
+
 import six
-
-from mongoengine import DictField, IntField, StringField, \
-                        EmailField, BooleanField
+from mongoengine import BooleanField, DictField, EmailField, IntField, StringField
 from mongoengine.queryset import OperationError
+from social_core.storage import (
+    AssociationMixin,
+    BaseStorage,
+    CodeMixin,
+    NonceMixin,
+    PartialMixin,
+    UserMixin,
+)
 
-from social_core.storage import UserMixin, AssociationMixin, NonceMixin, \
-                                CodeMixin, PartialMixin, BaseStorage
-
-
-UNUSABLE_PASSWORD = '!'  # Borrowed from django 1.4
+UNUSABLE_PASSWORD = "!"  # Borrowed from django 1.4
 
 
 class MongoengineUserMixin(UserMixin):
     """Social Auth association model"""
+
     user = None
     provider = StringField(max_length=32)
-    uid = StringField(max_length=255, unique_with='provider')
+    uid = StringField(max_length=255, unique_with="provider")
     extra_data = DictField()
 
     def str_id(self):
@@ -45,14 +49,14 @@ class MongoengineUserMixin(UserMixin):
 
     @classmethod
     def username_field(cls):
-        return getattr(cls.user_model(), 'USERNAME_FIELD', 'username')
+        return getattr(cls.user_model(), "USERNAME_FIELD", "username")
 
     @classmethod
     def create_user(cls, *args, **kwargs):
-        kwargs['password'] = UNUSABLE_PASSWORD
-        if 'email' in kwargs:
+        kwargs["password"] = UNUSABLE_PASSWORD
+        if "email" in kwargs:
             # Empty string makes email regex validation fail
-            kwargs['email'] = kwargs['email'] or None
+            kwargs["email"] = kwargs["email"] or None
         return cls.user_model().objects.create(*args, **kwargs)
 
     @classmethod
@@ -63,7 +67,7 @@ class MongoengineUserMixin(UserMixin):
             qs = cls.objects.filter(provider__ne=backend_name)
         qs = qs.filter(user=user)
 
-        if hasattr(user, 'has_usable_password'):
+        if hasattr(user, "has_usable_password"):
             valid_password = user.has_usable_password()
         else:
             valid_password = True
@@ -88,8 +92,8 @@ class MongoengineUserMixin(UserMixin):
         Return True/False if a User instance exists with the given arguments.
         Arguments are directly passed to filter() manager method.
         """
-        if 'username' in kwargs:
-            kwargs[cls.username_field()] = kwargs.pop('username')
+        if "username" in kwargs:
+            kwargs[cls.username_field()] = kwargs.pop("username")
         return cls.user_model().objects.filter(*args, **kwargs).count() > 0
 
     @classmethod
@@ -119,19 +123,21 @@ class MongoengineUserMixin(UserMixin):
 
 class MongoengineNonceMixin(NonceMixin):
     """One use numbers"""
+
     server_url = StringField(max_length=255)
     timestamp = IntField()
     salt = StringField(max_length=40)
 
     @classmethod
     def use(cls, server_url, timestamp, salt):
-        return cls.objects.get_or_create(server_url=server_url,
-                                         timestamp=timestamp,
-                                         salt=salt)[1]
+        return cls.objects.get_or_create(
+            server_url=server_url, timestamp=timestamp, salt=salt
+        )[1]
 
 
 class MongoengineAssociationMixin(AssociationMixin):
     """OpenId account association"""
+
     server_url = StringField(max_length=255)
     handle = StringField(max_length=255)
     secret = StringField(max_length=255)  # Stored base64 encoded
@@ -143,11 +149,9 @@ class MongoengineAssociationMixin(AssociationMixin):
     def store(cls, server_url, association):
         # Don't use get_or_create because issued cannot be null
         try:
-            assoc = cls.objects.get(server_url=server_url,
-                                    handle=association.handle)
+            assoc = cls.objects.get(server_url=server_url, handle=association.handle)
         except cls.DoesNotExist:
-            assoc = cls(server_url=server_url,
-                        handle=association.handle)
+            assoc = cls(server_url=server_url, handle=association.handle)
         assoc.secret = base64.encodestring(association.secret).decode()
         assoc.issued = association.issued
         assoc.lifetime = association.lifetime
@@ -206,5 +210,4 @@ class BaseMongoengineStorage(BaseStorage):
 
     @classmethod
     def is_integrity_error(cls, exception):
-        return exception.__class__ is OperationError and \
-               'E11000' in exception.message
+        return exception.__class__ is OperationError and "E11000" in exception.message
