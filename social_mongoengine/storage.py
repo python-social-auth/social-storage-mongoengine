@@ -79,7 +79,7 @@ class MongoengineUserMixin(UserMixin):
         user.save()
 
     def set_extra_data(self, extra_data=None):
-        if super(MongoengineUserMixin, self).set_extra_data(extra_data):
+        if super().set_extra_data(extra_data):
             self.save()
 
     @classmethod
