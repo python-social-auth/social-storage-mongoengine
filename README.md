@@ -18,7 +18,7 @@ Project documentation is available at <https://python-social-auth.readthedocs.io
 ## Setup
 
 ```shell
-$ pip install social-auth-storage-mongoengine
+pip install social-auth-storage-mongoengine
 ```
 
 ## Contributing
